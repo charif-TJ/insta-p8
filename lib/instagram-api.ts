@@ -65,10 +65,13 @@ export function buildCardAttachment(card: IGCard) {
 }
 
 /**
- * Build the follower-gate card shown to non-followers. Centralized so the
- * comment, story, and DM branches all share the same copy and the same
- * `as const` button types — preserving the `"web_url"` / `"postback"`
- * literal types that `IGButton` requires.
+ * Build the classic two-button follower-gate card.
+ *
+ * Button 1 → opens the profile URL so the user can follow.
+ * Button 2 → postback that triggers the unlock/verify flow.
+ *
+ * Use this when you want to guide the user step-by-step:
+ *   "Follow" → then "I Followed ✅"
  */
 export function buildFollowGateCard(params: {
   username: string
@@ -82,6 +85,38 @@ export function buildFollowGateCard(params: {
     buttons: [
       { type: "web_url", url: `https://instagram.com/${params.username}`, title: "Follow" },
       { type: "postback", title: "I Followed! ✅", payload: `UNLOCK_CONTENT_${params.ruleId}` },
+    ],
+  }
+}
+
+/**
+ * Build a single-button follow-check card.
+ *
+ * Unlike the two-button gate card, this has ONE postback button only.
+ * Clicking it does NOT open any URL — it simply triggers the follow-status
+ * verification on the server side:
+ *   • If the user IS following  → the automation content is sent.
+ *   • If the user is NOT following → nothing is sent (silent rejection).
+ *
+ * Use this when you want a cleaner UX:
+ *   User follows manually → taps the button → system checks & responds.
+ */
+export function buildFollowCheckCard(params: {
+  username: string
+  ruleId: string
+  title?: string
+  subtitle?: string
+  buttonLabel?: string
+}): IGCard {
+  return {
+    title: params.title ?? "🔒 Exclusive Content",
+    subtitle: params.subtitle ?? `Follow @${params.username} first, then tap the button below to unlock.`,
+    buttons: [
+      {
+        type: "postback",
+        title: params.buttonLabel ?? "✅ Check My Follow",
+        payload: `UNLOCK_CONTENT_${params.ruleId}`,
+      },
     ],
   }
 }
