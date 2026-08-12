@@ -288,6 +288,14 @@ export async function POST(request: NextRequest) {
           const mediaId = change.value.media.id
           const parentId = change.value.parent_id || null
 
+          // CRITICAL: comment_id MUST be present to send a Private Reply.
+          // Using { id: senderId } instead of { comment_id } will silently fail
+          // for users who have never messaged this account before.
+          if (!commentId) {
+            console.warn(`[webhook] ⚠️ Skipping comment event — no comment_id in payload:`, JSON.stringify(change.value))
+            continue
+          }
+
           if (senderId === webhookId || senderId === user.business_account_id || senderId === user.page_id) continue
 
           const commentAutomations = automations.filter((a: any) => a.trigger_source === "comment")
@@ -333,10 +341,15 @@ export async function POST(request: NextRequest) {
                       return pickRandom(pool)
                     }
 
+                    // ===== PRIVATE REPLY VIA COMMENT_ID =====
+                    // Per Meta docs, to send a private reply to someone who commented,
+                    // you MUST use { comment_id } as the recipient — NOT { id: senderId }.
+                    // Using senderId alone fails for first-time commenters who have never
+                    // opened a DM conversation with this account.
+                    // Ref: https://developers.facebook.com/docs/messenger-platform/instagram/private-replies
+                    console.log(`[webhook] 💬 Private reply target: comment_id=${commentId} (sender=${senderId})`)
+
                     // ===== FOLLOWER GATE FOR COMMENTS =====
-                    // The gate card is delivered as a *private reply* to the comment. recipient.id
-                    // alone won't open a DM with someone who has never messaged the account; private
-                    // replies to a comment need comment_id.
                     if (content.check_follow === true) {
                       const followResult = await verifyFollowStatus(senderId, user.access_token)
 
