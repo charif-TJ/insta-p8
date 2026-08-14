@@ -36,7 +36,7 @@ export function Sidebar({ className, username = "creator", profilePic, onLogout,
               <div className="w-7 h-7 bg-accent-yellow text-accent-yellow-foreground rounded-md flex items-center justify-center shrink-0">
                 <Zap className="w-3.5 h-3.5" strokeWidth={2.5} />
               </div>
-              <span className="font-mono-ui text-sm font-bold tracking-tight text-sidebar-foreground flex-1">insta-p8</span>
+              <span className="font-mono-ui text-xs font-bold tracking-tight text-sidebar-foreground flex-1 truncate">Instagram Automation</span>
               <ThemeToggle />
             </div>
 
@@ -85,16 +85,6 @@ export function Sidebar({ className, username = "creator", profilePic, onLogout,
           <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
           <span>Settings</span>
         </Link>
-
-        <a
-          href="https://t.me/instagramautomationp8"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-        >
-          <Send className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-          <span>Get help</span>
-        </a>
       </nav>
 
       {/* Account */}
