@@ -450,33 +450,59 @@ export async function POST(request: NextRequest) {
               (a: any) => a.trigger_type === "mention" && (!a.specific_media_id || a.specific_media_id === storyMediaId),
             )
           } else if (event.reaction) {
-            const reactionEmoji = event.reaction.emoji
-            storyMediaId = event.reaction.mid || null
+            // Skip un-react events (when a user removes a heart/like)
+            if (event.reaction.action === "unreact") continue
+
+            // Meta can send emoji or reaction text (e.g. "love", "like", "❤️", "🔥", etc.)
+            const reactionValue = (event.reaction.emoji || event.reaction.reaction || "").trim()
+            storyMediaId = event.reaction.story_id || null
+
+            console.log(`[webhook] 🎭 Story Reaction received: value="${reactionValue}" action="${event.reaction.action}"`)
+
             match = storyAutomations.find((a: any) => {
-              if (a.trigger_type !== "reaction") return false
-              if (a.specific_media_id && a.specific_media_id !== storyMediaId) return false
+              if (a.trigger_type !== "reaction" && a.trigger_type !== "reply") return false
+              if (a.specific_media_id && storyMediaId && a.specific_media_id !== storyMediaId) return false
+
               const triggers = a.trigger_value?.split(",").map((t: string) => t.trim()) || []
-              if (triggers.length > 0 && triggers[0] !== "ALL" && triggers[0] !== "ALL_REACTIONS" && triggers[0] !== "") {
-                return triggers.includes(reactionEmoji)
+              if (triggers.length === 0 || triggers[0] === "ALL" || triggers[0] === "ALL_REACTIONS" || triggers[0] === "") {
+                return true
               }
-              return true
+
+              const normalizedVal = reactionValue.toLowerCase()
+              return triggers.some((t: string) => {
+                const lowerT = t.toLowerCase()
+                // Map common Meta string names to emojis & vice-versa
+                if (lowerT === "love" || lowerT === "heart") return normalizedVal === "love" || normalizedVal === "heart" || normalizedVal.includes("❤️") || normalizedVal.includes("💖")
+                if (lowerT === "like" || lowerT === "thumbsup") return normalizedVal === "like" || normalizedVal.includes("👍")
+                if (lowerT === "fire") return normalizedVal === "fire" || normalizedVal.includes("🔥")
+                return lowerT === normalizedVal || reactionValue.includes(t) || t.includes(reactionValue)
+              })
             })
           } else if (event.message?.reply_to?.story) {
-            const messageText = event.message.text || ""
+            const messageText = (event.message.text || "").trim()
             storyMediaId = event.message.reply_to.story.id || null
+
+            console.log(`[webhook] 💬 Story Reply received: text="${messageText}" story_id="${storyMediaId}"`)
+
             match = storyAutomations.find((a: any) => {
-              if (a.trigger_type !== "reply") return false
-              if (a.specific_media_id && a.specific_media_id !== storyMediaId) return false
+              if (a.trigger_type !== "reply" && a.trigger_type !== "reaction") return false
+              if (a.specific_media_id && storyMediaId && a.specific_media_id !== storyMediaId) return false
+
               const triggers = a.trigger_value?.split(",").map((t: string) => t.trim()) || []
               if (
-                triggers.length > 0 &&
-                triggers[0] !== "ALL" &&
-                triggers[0] !== "ALL_MENTIONS" &&
-                triggers[0] !== ""
+                triggers.length === 0 ||
+                triggers[0] === "ALL" ||
+                triggers[0] === "ALL_REACTIONS" ||
+                triggers[0] === "ALL_MENTIONS" ||
+                triggers[0] === ""
               ) {
-                return keywordMatches(a.trigger_value, messageText)
+                return true
               }
-              return true
+
+              // Check both keyword match and reaction emoji match
+              const isKeywordMatch = keywordMatches(a.trigger_value, messageText)
+              const isEmojiMatch = triggers.some((t: string) => messageText.includes(t) || t.includes(messageText))
+              return isKeywordMatch || isEmojiMatch
             })
           }
 
