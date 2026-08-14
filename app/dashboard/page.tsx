@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { useInstagramSession } from "@/hooks/use-instagram-session"
 import { Activity, Users, MessageCircle, Zap, Loader2 } from "lucide-react"
@@ -127,14 +128,14 @@ export default function DashboardPage() {
                 <Card className="p-6 bg-card border-border">
                     <h3 className="font-serif-display text-2xl text-foreground mb-5">Quick actions</h3>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="h-24 rounded-xl border border-dashed border-border flex flex-col items-center justify-center hover:bg-accent hover:border-accent-yellow cursor-pointer transition-colors group">
+                        <Link href="/dashboard/automations" className="h-24 rounded-xl border border-dashed border-border flex flex-col items-center justify-center hover:bg-accent hover:border-accent-yellow cursor-pointer transition-colors group">
                             <Zap className="w-6 h-6 text-muted-foreground group-hover:text-accent-yellow-foreground dark:group-hover:text-accent-yellow mb-2 transition-colors" />
                             <span className="text-xs font-medium text-foreground">New Rule</span>
-                        </div>
-                        <div className="h-24 rounded-xl border border-dashed border-border flex flex-col items-center justify-center hover:bg-accent hover:border-accent-yellow cursor-pointer transition-colors group">
+                        </Link>
+                        <Link href="/dashboard/inbox" className="h-24 rounded-xl border border-dashed border-border flex flex-col items-center justify-center hover:bg-accent hover:border-accent-yellow cursor-pointer transition-colors group">
                             <Users className="w-6 h-6 text-muted-foreground group-hover:text-accent-yellow-foreground dark:group-hover:text-accent-yellow mb-2 transition-colors" />
                             <span className="text-xs font-medium text-foreground">View Audience</span>
-                        </div>
+                        </Link>
                     </div>
                 </Card>
             </div>
